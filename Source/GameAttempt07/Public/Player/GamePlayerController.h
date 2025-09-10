@@ -40,4 +40,8 @@ private:
 
 	void Move(const FInputActionValue& InputActionValue);
 	void Look (const FInputActionValue& InputActionValue);
+
+
+
+
 };

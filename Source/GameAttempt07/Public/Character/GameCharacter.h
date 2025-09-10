@@ -4,6 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "Character/GameCharacterBase.h"
+#include "Components/SphereComponent.h"
+#include "Interaction/InteractionComponent.h"
 #include "GameCharacter.generated.h"
 
 /**
@@ -18,6 +20,12 @@ public:
 	AGameCharacter();
 	virtual void Tick(float DeltaTime) override;;
 	
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Components")
+	USphereComponent* InteractionSphere;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Components")
+	UInteractionComponent* InteractionComponent;
+
 
 protected:
 	virtual void BeginPlay() override;
@@ -27,6 +35,8 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Camera")
 	class UCameraComponent* Camera;
+
+
 	
 
 
