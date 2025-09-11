@@ -17,7 +17,6 @@ class GAMEATTEMPT07_API UInteractionComponent : public UActorComponent
 
 public:	
 	UInteractionComponent();
-
 			
 	UFUNCTION()
 	void OnInteractionBeginOverlap(
@@ -37,15 +36,16 @@ public:
 		int32 OtherBodyIndex
 	);
 
-
 protected:
 	virtual void BeginPlay() override;
 
 public:	
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	UPROPERTY()
+	TArray<TScriptInterface<IInteractInterface>> OverlappedInteractables;
 
-	
+	UPROPERTY()
 	TScriptInterface<IInteractInterface> CurrentInteractionObject;
-	TScriptInterface<IInteractInterface> LastInteractionObject;
+
 };

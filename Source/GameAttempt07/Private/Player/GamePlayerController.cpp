@@ -5,6 +5,7 @@
 
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
+#include "Interaction/InteractionComponent.h"
 
 AGamePlayerController::AGamePlayerController()
 {
@@ -45,6 +46,7 @@ void AGamePlayerController::SetupInputComponent()
 
 	EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AGamePlayerController::Move);
 	EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AGamePlayerController::Look);
+	EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &AGamePlayerController::Interact);
 
 	
 }
@@ -73,4 +75,45 @@ void AGamePlayerController::Look(const FInputActionValue& InputActionValue)
 
 	AddYawInput(LookAxisVector.X);
 	AddPitchInput(LookAxisVector.Y); 
+}
+
+void AGamePlayerController::Interact(const FInputActionValue& InputActionValue)
+{
+	if (APawn* ControlledPawn = GetPawn<APawn>())
+	{
+		if (UInteractionComponent* InteractionComponent = ControlledPawn->FindComponentByClass<UInteractionComponent>())
+		{
+			if (InteractionComponent->CurrentInteractionObject)
+			{
+				UObject* Target = InteractionComponent->CurrentInteractionObject.GetObject();
+				
+				const EInteractionType Type = IInteractInterface::Execute_GetInteractionType(Target);
+				
+				switch (Type)
+				{
+				case EInteractionType::Pickup:
+					IInteractInterface::Execute_InteractWithObject(Target, ControlledPawn);
+					break;
+
+				case EInteractionType::Door:
+					IInteractInterface::Execute_InteractWithObject(Target, ControlledPawn);
+					break;
+
+				case EInteractionType::Dialogue:
+					IInteractInterface::Execute_InteractWithObject(Target, ControlledPawn);
+					break;
+
+				case EInteractionType::Vehicle:
+					IInteractInterface::Execute_InteractWithObject(Target, ControlledPawn);
+					break;
+
+				case EInteractionType::None:
+				default:
+					IInteractInterface::Execute_InteractWithObject(Target, ControlledPawn);
+					break;
+				}
+			}
+			
+		}
+	}
 }

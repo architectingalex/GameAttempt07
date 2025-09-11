@@ -38,8 +38,12 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> LookAction;
 
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> InteractAction;
+
 	void Move(const FInputActionValue& InputActionValue);
 	void Look (const FInputActionValue& InputActionValue);
+	void Interact (const FInputActionValue& InputActionValue);
 
 
 

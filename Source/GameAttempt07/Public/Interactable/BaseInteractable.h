@@ -21,6 +21,11 @@ public:
 
 	virtual void HighlightActor_Implementation() override;
 	virtual void UnHighlightActor_Implementation() override;
+	virtual void InteractWithObject_Implementation(AActor* Interactor) override;
+	virtual EInteractionType GetInteractionType_Implementation() const override;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Interaction")
+	EInteractionType InteractionType = EInteractionType::None;
 
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Components")

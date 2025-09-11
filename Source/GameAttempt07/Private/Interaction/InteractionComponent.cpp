@@ -7,10 +7,7 @@
 UInteractionComponent::UInteractionComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
-	
-
 }
-
 
 void UInteractionComponent::BeginPlay()
 {
@@ -21,22 +18,92 @@ void UInteractionComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	if (GEngine)
+	{
+		if (OverlappedInteractables.Num() == 0)
+		{
+			GEngine->AddOnScreenDebugMessage(1, 0.f, FColor::Cyan, TEXT("OverlappedInteractables: None"));
+		}
+		else
+		{
+			int32 MsgKey = 10;
+			for (const TScriptInterface<IInteractInterface>& Item : OverlappedInteractables)
+			{
+				if (Item.GetObject())
+				{
+					bool bIsCurrent = (Item.GetObject() == CurrentInteractionObject.GetObject());
+
+					FString DebugString;
+					if (bIsCurrent)
+					{
+						DebugString = FString(">>> Current: ") + Item.GetObject()->GetName() + FString(" <<<");
+					}
+					else
+					{
+						DebugString = FString("Overlapped: ") + Item.GetObject()->GetName();
+					}
+
+					FColor TextColor = bIsCurrent ? FColor::Red : FColor::Cyan;
+
+					GEngine->AddOnScreenDebugMessage(MsgKey++, 0.f, TextColor, DebugString);
+				}
+			}
+		}
+	}
+
 }
 
 void UInteractionComponent::OnInteractionBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UE_LOG(LogTemp, Warning, TEXT("MIR InteractionComponent: BeginOverlap with %s"),
-	OtherActor ? *OtherActor->GetName() : TEXT("null"));
+	if (OtherActor && OtherActor->GetClass()->ImplementsInterface(UInteractInterface::StaticClass()))
+	{
+		TScriptInterface<IInteractInterface> Interactable;
+		Interactable.SetObject(OtherActor);
+		Interactable.SetInterface(Cast<IInteractInterface>(OtherActor));
+		OverlappedInteractables.AddUnique(Interactable);
+
+		if (!CurrentInteractionObject)
+		{
+			CurrentInteractionObject = Interactable;
+			IInteractInterface::Execute_HighlightActor(OtherActor);
+			
+		}
+	}
 
 }
 
 void UInteractionComponent::OnInteractionEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	UE_LOG(LogTemp, Warning, TEXT("MIR InteractionComponent: EndOverlap with %s"),
-	OtherActor ? *OtherActor->GetName() : TEXT("null"));
+	if (OtherActor && OtherActor->GetClass()->ImplementsInterface(UInteractInterface::StaticClass()))
+	{
+		TScriptInterface<IInteractInterface> Interactable;
+		Interactable.SetObject(OtherActor);
+		Interactable.SetInterface(Cast<IInteractInterface>(OtherActor));
+
+		OverlappedInteractables.RemoveAll(
+	[OtherActor](const TScriptInterface<IInteractInterface>& Item)
+	{
+		return Item.GetObject() == OtherActor;
+	}
+);
+
+		if (CurrentInteractionObject.GetObject() == OtherActor)
+		{
+			IInteractInterface::Execute_UnHighlightActor(OtherActor);
+			CurrentInteractionObject = nullptr;
+			
+			if (OverlappedInteractables.Num() > 0)
+			{
+				CurrentInteractionObject = OverlappedInteractables[0];
+				IInteractInterface::Execute_HighlightActor(CurrentInteractionObject.GetObject());
+
+			}
+		}
+	}
 
 }
+
 
 

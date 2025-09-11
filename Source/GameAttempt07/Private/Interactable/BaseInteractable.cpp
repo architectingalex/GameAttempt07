@@ -31,7 +31,17 @@ void ABaseInteractable::HighlightActor_Implementation()
 void ABaseInteractable::UnHighlightActor_Implementation()
 {
 
-} 
+}
+
+void ABaseInteractable::InteractWithObject_Implementation(AActor* Interactor)
+{
+	Destroy();
+}
+
+EInteractionType ABaseInteractable::GetInteractionType_Implementation() const
+{
+	return InteractionType;
+}
 
 void ABaseInteractable::BeginPlay()
 {
