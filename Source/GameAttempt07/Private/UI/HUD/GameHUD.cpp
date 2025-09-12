@@ -15,7 +15,7 @@ if (OverlayWidgetController == nullptr)
 		return OverlayWidgetController;
 }
 
-void AGameHUD::InitOverlay(APlayerController* PC, APlayerState* PS)
+void AGameHUD::InitOverlay(AGamePlayerController* PC)
 {
 	checkf(OverlayWidgetClass, TEXT("Overlay Widget Class uninitialised, please fill out BP_GameHUD"));
 	checkf(OverlayWidgetControllerClass, TEXT("Overlay widget controller class uninitialised, please fill out BP_GameHUD"));
@@ -23,10 +23,11 @@ void AGameHUD::InitOverlay(APlayerController* PC, APlayerState* PS)
 	UUserWidget* Widget = CreateWidget<UUserWidget>(GetWorld(), OverlayWidgetClass);
 	OverlayWidget = Cast<UGameUserWidget>(Widget);
 
-	const FWidgetControllerParams WidgetControllerParams(PC, PS);
+	const FWidgetControllerParams WidgetControllerParams(PC);
 	UOverlayWidgetController* WidgetController = GetOverlayWidgetController(WidgetControllerParams);
 
 	OverlayWidget->SetWidgetController(WidgetController);
+	WidgetController->BroadcastInitialValues();
 	
 	Widget->AddToViewport();
 }

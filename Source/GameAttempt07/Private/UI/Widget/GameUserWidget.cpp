@@ -10,6 +10,3 @@ void UGameUserWidget::SetWidgetController(UObject* InWidgetController)
 	
 }
 
-void UGameUserWidget::WidgetControllerSet()
-{
-}

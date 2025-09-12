@@ -9,6 +9,8 @@
 #include "Equipment/EquipmentComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Player/GamePlayerController.h"
+#include "UI/HUD/GameHUD.h"
 
 AGameCharacter::AGameCharacter()
 {
@@ -56,6 +58,16 @@ void AGameCharacter::Tick(float DeltaTime)
 void AGameCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	CurrentHealth = MaxHealth;
+	CurrentStamina = MaxStamina;
+	if (AGamePlayerController* GamePlayerController = Cast<AGamePlayerController>(GetController()))
+	{
+		if (AGameHUD* GameHUD = Cast<AGameHUD>(GamePlayerController->GetHUD()))
+		{
+			GameHUD->InitOverlay(GamePlayerController);
+		}
+	}
 }
 
 

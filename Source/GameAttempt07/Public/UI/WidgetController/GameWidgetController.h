@@ -12,13 +12,10 @@ struct FWidgetControllerParams
 	GENERATED_BODY()
 
 	FWidgetControllerParams() {}
-	FWidgetControllerParams(APlayerController* PC, APlayerState* PS) : PlayerController(PC), PlayerState(PS) {}
+	FWidgetControllerParams(APlayerController* PC) : PlayerController(PC) {}
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<APlayerController> PlayerController = nullptr;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<APlayerState> PlayerState = nullptr;
 	
 };
 
@@ -33,6 +30,8 @@ class GAMEATTEMPT07_API UGameWidgetController : public UObject
 public:
 	UFUNCTION(BlueprintCallable)
 	void SetWidgetControllerParams(const FWidgetControllerParams& WCParams);
+	virtual void BroadcastInitialValues();
+	
 	
 protected:
 	UPROPERTY(BlueprintReadOnly, Category = "WidgetController")

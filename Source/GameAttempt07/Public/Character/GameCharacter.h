@@ -20,6 +20,18 @@ class GAMEATTEMPT07_API AGameCharacter : public AGameCharacterBase
 public:
 	AGameCharacter();
 	virtual void Tick(float DeltaTime) override;;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats")
+	float MaxHealth = 100.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Stats")
+	float CurrentHealth;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats")
+	float MaxStamina = 100.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Stats")
+	float CurrentStamina;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Components")
 	USphereComponent* InteractionSphere;

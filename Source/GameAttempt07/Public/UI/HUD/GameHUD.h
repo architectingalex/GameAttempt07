@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/HUD.h"
+#include "Player/GamePlayerController.h"
 #include "UI/Widget/GameUserWidget.h"
 #include "GameHUD.generated.h"
 struct FWidgetControllerParams;
@@ -23,9 +24,8 @@ public:
 
 	UOverlayWidgetController* GetOverlayWidgetController(const FWidgetControllerParams& WCParams);
 
-	void InitOverlay(APlayerController* PC, APlayerState* PS);
+	void InitOverlay(AGamePlayerController* PC);
 
-	
 protected:
 	
 private:

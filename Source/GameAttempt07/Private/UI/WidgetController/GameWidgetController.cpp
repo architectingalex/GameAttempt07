@@ -6,5 +6,8 @@
 void UGameWidgetController::SetWidgetControllerParams(const FWidgetControllerParams& WCParams)
 {
 	PlayerController = WCParams.PlayerController;
-	PlayerState = WCParams.PlayerState;
+}
+
+void UGameWidgetController::BroadcastInitialValues()
+{
 }
