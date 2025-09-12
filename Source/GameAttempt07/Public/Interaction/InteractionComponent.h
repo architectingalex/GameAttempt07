@@ -36,8 +36,12 @@ public:
 		int32 OtherBodyIndex
 	);
 
+
+
+	
 protected:
 	virtual void BeginPlay() override;
+	void PrintInteractablesInRange();
 
 public:	
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;

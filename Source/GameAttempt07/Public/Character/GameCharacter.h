@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Character/GameCharacterBase.h"
 #include "Components/SphereComponent.h"
+#include "Equipment/EquipmentComponent.h"
 #include "Interaction/InteractionComponent.h"
 #include "GameCharacter.generated.h"
 
@@ -25,6 +26,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Components")
 	UInteractionComponent* InteractionComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Components")
+	UEquipmentComponent* EquipmentComponent;
 
 
 protected:

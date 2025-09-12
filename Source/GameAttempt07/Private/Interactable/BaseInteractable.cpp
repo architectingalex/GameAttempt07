@@ -3,22 +3,11 @@
 
 #include "Interactable/BaseInteractable.h"
 #include "Components/StaticMeshComponent.h"
+#include "Equipment/EquipmentComponent.h"
 
 ABaseInteractable::ABaseInteractable()
 {
 	PrimaryActorTick.bCanEverTick = true;
-
-	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
-
-	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
-	Mesh->SetupAttachment(RootComponent);
-
-	CollisionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionSphere"));
-	CollisionSphere->SetupAttachment(Mesh);
-	CollisionSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	CollisionSphere->InitSphereRadius(100.f);
-	CollisionSphere->SetCollisionResponseToAllChannels(ECR_Ignore);
-	CollisionSphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 
 }
 
@@ -35,7 +24,12 @@ void ABaseInteractable::UnHighlightActor_Implementation()
 
 void ABaseInteractable::InteractWithObject_Implementation(AActor* Interactor)
 {
-	Destroy();
+	if (!Interactor) return;
+
+	if (UEquipmentComponent* EquipComp = Interactor->FindComponentByClass<UEquipmentComponent>())
+	{
+		EquipComp->TryEquip(Cast<AInteractableEquipment>(this));
+	}
 }
 
 EInteractionType ABaseInteractable::GetInteractionType_Implementation() const

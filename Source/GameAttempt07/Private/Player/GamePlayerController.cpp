@@ -5,20 +5,17 @@
 
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
+#include "Equipment/EquipmentComponent.h"
 #include "Interaction/InteractionComponent.h"
 
 AGamePlayerController::AGamePlayerController()
 {
 	bReplicates = true;
-	
 }
 
 void AGamePlayerController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	
-
 }
 
 void AGamePlayerController::BeginPlay()
@@ -34,8 +31,6 @@ void AGamePlayerController::BeginPlay()
 	//*	FInputModeGameAndUI InputModeData;
 	//* InputModeData.SetLockMouseToViewportBehavior((EMouseLockMode::DoNotLock));
 	//* SetInputMode(InputModeData);
-
-	
 }
 
 void AGamePlayerController::SetupInputComponent()
@@ -47,8 +42,7 @@ void AGamePlayerController::SetupInputComponent()
 	EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AGamePlayerController::Move);
 	EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AGamePlayerController::Look);
 	EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &AGamePlayerController::Interact);
-
-	
+	EnhancedInputComponent->BindAction(DropAction, ETriggerEvent::Started, this, &AGamePlayerController::Drop);
 }
 
 void AGamePlayerController::Move(const FInputActionValue& InputActionValue)
@@ -64,9 +58,6 @@ void AGamePlayerController::Move(const FInputActionValue& InputActionValue)
 		ControlledPawn->AddMovementInput(ForwardDirection, InputAxisVector.Y);
 		ControlledPawn->AddMovementInput(RightDirection, InputAxisVector.X);
 	}
-
-	
-		
 }
 
 void AGamePlayerController::Look(const FInputActionValue& InputActionValue)
@@ -114,6 +105,17 @@ void AGamePlayerController::Interact(const FInputActionValue& InputActionValue)
 				}
 			}
 			
+		}
+	}
+}
+
+void AGamePlayerController::Drop(const FInputActionValue& InputActionValue)
+{
+	if (APawn* ControlledPawn = GetPawn<APawn>())
+	{
+		if (UEquipmentComponent* EquipmentComponent = ControlledPawn->FindComponentByClass<UEquipmentComponent>())
+		{
+			EquipmentComponent->DropActiveEquipment();
 		}
 	}
 }

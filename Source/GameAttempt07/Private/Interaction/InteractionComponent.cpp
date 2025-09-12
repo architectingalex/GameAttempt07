@@ -18,6 +18,57 @@ void UInteractionComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	//PrintInteractablesInRange();
+}
+
+void UInteractionComponent::OnInteractionBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (OtherActor && OtherActor->GetClass()->ImplementsInterface(UInteractInterface::StaticClass()))
+	{
+		TScriptInterface<IInteractInterface> Interactable;
+		Interactable.SetObject(OtherActor);
+		Interactable.SetInterface(Cast<IInteractInterface>(OtherActor));
+		OverlappedInteractables.AddUnique(Interactable);
+
+		if (!CurrentInteractionObject)
+		{
+			CurrentInteractionObject = Interactable;
+			IInteractInterface::Execute_HighlightActor(OtherActor);
+		}
+	}
+}
+
+void UInteractionComponent::OnInteractionEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if (OtherActor && OtherActor->GetClass()->ImplementsInterface(UInteractInterface::StaticClass()))
+	{
+		TScriptInterface<IInteractInterface> Interactable;
+		Interactable.SetObject(OtherActor);
+		Interactable.SetInterface(Cast<IInteractInterface>(OtherActor));
+
+		OverlappedInteractables.RemoveAll(
+	[OtherActor](const TScriptInterface<IInteractInterface>& Item)
+	{
+		return Item.GetObject() == OtherActor;
+	}
+);
+
+		if (CurrentInteractionObject.GetObject() == OtherActor)
+		{
+			IInteractInterface::Execute_UnHighlightActor(OtherActor);
+			CurrentInteractionObject = nullptr;
+			
+			if (OverlappedInteractables.Num() > 0)
+			{
+				CurrentInteractionObject = OverlappedInteractables[0];
+				IInteractInterface::Execute_HighlightActor(CurrentInteractionObject.GetObject());
+			}
+		}
+	}
+}
+
+void UInteractionComponent::PrintInteractablesInRange()
+{
 	if (GEngine)
 	{
 		if (OverlappedInteractables.Num() == 0)
@@ -50,60 +101,8 @@ void UInteractionComponent::TickComponent(float DeltaTime, ELevelTick TickType, 
 			}
 		}
 	}
-
 }
 
-void UInteractionComponent::OnInteractionBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	if (OtherActor && OtherActor->GetClass()->ImplementsInterface(UInteractInterface::StaticClass()))
-	{
-		TScriptInterface<IInteractInterface> Interactable;
-		Interactable.SetObject(OtherActor);
-		Interactable.SetInterface(Cast<IInteractInterface>(OtherActor));
-		OverlappedInteractables.AddUnique(Interactable);
-
-		if (!CurrentInteractionObject)
-		{
-			CurrentInteractionObject = Interactable;
-			IInteractInterface::Execute_HighlightActor(OtherActor);
-			
-		}
-	}
-
-}
-
-void UInteractionComponent::OnInteractionEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
-{
-	if (OtherActor && OtherActor->GetClass()->ImplementsInterface(UInteractInterface::StaticClass()))
-	{
-		TScriptInterface<IInteractInterface> Interactable;
-		Interactable.SetObject(OtherActor);
-		Interactable.SetInterface(Cast<IInteractInterface>(OtherActor));
-
-		OverlappedInteractables.RemoveAll(
-	[OtherActor](const TScriptInterface<IInteractInterface>& Item)
-	{
-		return Item.GetObject() == OtherActor;
-	}
-);
-
-		if (CurrentInteractionObject.GetObject() == OtherActor)
-		{
-			IInteractInterface::Execute_UnHighlightActor(OtherActor);
-			CurrentInteractionObject = nullptr;
-			
-			if (OverlappedInteractables.Num() > 0)
-			{
-				CurrentInteractionObject = OverlappedInteractables[0];
-				IInteractInterface::Execute_HighlightActor(CurrentInteractionObject.GetObject());
-
-			}
-		}
-	}
-
-}
 
 
 

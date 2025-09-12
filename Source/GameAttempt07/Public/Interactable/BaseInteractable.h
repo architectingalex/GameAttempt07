@@ -27,13 +27,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Interaction")
 	EInteractionType InteractionType = EInteractionType::None;
 
-	
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Components")
-	UStaticMeshComponent* Mesh;
-	
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Components")
-	USphereComponent* CollisionSphere;
-
 protected:
 	virtual void BeginPlay() override;
 
