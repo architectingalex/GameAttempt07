@@ -28,6 +28,7 @@ public:
 
 	/** State control */
 	void SetActiveSlot(EEquipmentSlot NewActiveSlot);
+	void SetSlotToEmpty(FInteractableEquipmentStruct* Slot);
 
 	/** Debug */
 	void DebugPrintEquipment() const;

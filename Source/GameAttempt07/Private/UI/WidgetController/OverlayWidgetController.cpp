@@ -23,7 +23,8 @@ void UOverlayWidgetController::BroadcastInitialValues()
 			}
 			if (UEquipmentComponent* EquipmentComponent = Pawn->FindComponentByClass<UEquipmentComponent>())
 			{
-				OnPrimaryEquipmentChanged.Broadcast(EquipmentComponent->PrimaryInteractableEquipment);
+				OnEquipmentChanged.Broadcast(EEquipmentSlot::Primary, EquipmentComponent->PrimaryInteractableEquipment);
+				OnEquipmentChanged.Broadcast(EEquipmentSlot::Secondary, EquipmentComponent->SecondaryInteractableEquipment);
 				
 				EquipmentComponent->OnEquipmentSlotChanged.AddDynamic(this, &UOverlayWidgetController::HandleEquipmentSlotChanged);
 			}
@@ -35,5 +36,5 @@ void UOverlayWidgetController::BroadcastInitialValues()
 
 void UOverlayWidgetController::HandleEquipmentSlotChanged(FInteractableEquipmentStruct NewSlotInfo)
 {
-	OnPrimaryEquipmentChanged.Broadcast(NewSlotInfo);
+	OnEquipmentChanged.Broadcast(NewSlotInfo.EquipmentSlot, NewSlotInfo);
 }

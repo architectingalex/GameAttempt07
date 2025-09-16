@@ -10,7 +10,7 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHealthChangedSignature, float, NewHealth);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMaxHealthChangedSignature, float, NewMaxHealth);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPrimaryEquipmentChanged, FInteractableEquipmentStruct, NewSlotInfo);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEquipmentChanged, EEquipmentSlot, ChangedSlot, FInteractableEquipmentStruct, NewSlotInfo);
 
 
 
@@ -32,7 +32,7 @@ public:
 	FOnMaxHealthChangedSignature OnMaxHealthChanged;
 
 	UPROPERTY(BlueprintAssignable, Category="Equipment")
-	FOnPrimaryEquipmentChanged OnPrimaryEquipmentChanged;
+	FOnEquipmentChanged OnEquipmentChanged;
 
 	UFUNCTION()
 	void HandleEquipmentSlotChanged(FInteractableEquipmentStruct NewSlotInfo);

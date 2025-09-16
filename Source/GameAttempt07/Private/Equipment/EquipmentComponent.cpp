@@ -9,10 +9,9 @@
 UEquipmentComponent::UEquipmentComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
-
+	
 	PrimaryInteractableEquipment.EquipmentSlot = EEquipmentSlot::Primary;
 	SecondaryInteractableEquipment.EquipmentSlot = EEquipmentSlot::Secondary;
-	
 }
 
 void UEquipmentComponent::BeginPlay()
@@ -55,11 +54,16 @@ void UEquipmentComponent::EquipItem(AInteractableEquipment* NewEquip)
 	EEquipmentSlot NewItemsSlot = NewEquip->InteractableEquipmentStruct.EquipmentSlot;
 	if (FInteractableEquipmentStruct* Slot = FindSlot(NewItemsSlot))
 	{
-		EquipItemToSlot(NewEquip, Slot);
-	}
-	else
-	{
+		if (Slot->EquipmentUsageState == EEquipmentUsageState::InUse)
+		{
+			ActiveSlot = Slot->EquipmentSlot;
+			UnequipActiveItem();
+		}
 
+		EquipItemToSlot(NewEquip, Slot);
+
+		// Always bring the new one to hand
+		SetActiveSlot(Slot->EquipmentSlot);
 	}
 }
 
@@ -71,15 +75,29 @@ void UEquipmentComponent::SetSlotFromItem(class AInteractableEquipment* NewEquip
 	Slot->SkeletalMesh = NewEquip->InteractableEquipmentStruct.SkeletalMesh;
 	Slot->EquippedActor = NewEquip;
 	Slot->EquipmentUsageState = EEquipmentUsageState::InUse;
-	Slot->AttachSocket = NewEquip->InteractableEquipmentStruct.AttachSocket;
+	Slot->HandSocket = NewEquip->InteractableEquipmentStruct.HandSocket;
+	Slot->HolsterSocket = NewEquip->InteractableEquipmentStruct.HolsterSocket;
+	
 }
 
 void UEquipmentComponent::EquipItemToSlot(class AInteractableEquipment* NewEquip, FInteractableEquipmentStruct* Slot)
 {
 	if (!NewEquip || !Slot) return;
+
 	SetSlotFromItem(NewEquip, Slot);
-	AttachItemToCharacter(NewEquip, Slot);
-	SetActiveSlot(Slot->EquipmentSlot);
+	PrepareForAttachment(NewEquip);
+
+	// By default, just attach to holster first
+	ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
+	if (OwnerCharacter && Slot->HolsterSocket != NAME_None)
+	{
+		NewEquip->AttachToComponent(
+			OwnerCharacter->GetMesh(),
+			FAttachmentTransformRules::SnapToTargetNotIncludingScale,
+			Slot->HolsterSocket
+		);
+	}
+
 	OnEquipmentSlotChanged.Broadcast(*Slot);
 }
 
@@ -95,17 +113,17 @@ bool UEquipmentComponent::CanAttach(AInteractableEquipment* NewEquip, FInteracta
 		return false;
 	}
 
-	if (Slot->AttachSocket == NAME_None)
+	if (Slot->HandSocket == NAME_None)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("AttachToCharacter: no socket specified for slot %s"),
 			*UEnum::GetValueAsString(Slot->EquipmentSlot));
 		return false;
 	}
 
-	if (!OutOwner->GetMesh()->DoesSocketExist(Slot->AttachSocket))
+	if (!OutOwner->GetMesh()->DoesSocketExist(Slot->HandSocket))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("AttachToCharacter: mesh has no socket named %s"),
-			*Slot->AttachSocket.ToString());
+			*Slot->HandSocket.ToString());
 		return false;
 	}
 
@@ -155,7 +173,7 @@ void UEquipmentComponent::AttachMesh(AInteractableEquipment* NewEquip, FInteract
 {
 	if (!NewEquip || !Slot || !OwnerCharacter || !OwnerCharacter->GetMesh()) return;
 
-	NewEquip->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, Slot->AttachSocket);
+	NewEquip->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, Slot->HandSocket);
 	NewEquip->SetActorRelativeTransform(FTransform::Identity);
 }
 
@@ -167,7 +185,7 @@ void UEquipmentComponent::AttachItemToCharacter(AInteractableEquipment* NewEquip
 	PrepareForAttachment(NewEquip);
 	AttachMesh(NewEquip, Slot, OwnerCharacter);
 
-	UE_LOG(LogTemp, Warning, TEXT("%s attached to %s at socket %s"), *GetNameSafe(NewEquip), *OwnerCharacter->GetName(), *Slot->AttachSocket.ToString());
+	UE_LOG(LogTemp, Warning, TEXT("%s attached to %s at socket %s"), *GetNameSafe(NewEquip), *OwnerCharacter->GetName(), *Slot->HandSocket.ToString());
 }
 
 AInteractableEquipment* UEquipmentComponent::GetActiveEquipment() const
@@ -185,8 +203,84 @@ AInteractableEquipment* UEquipmentComponent::GetActiveEquipment() const
 
 void UEquipmentComponent::SetActiveSlot(EEquipmentSlot NewActiveSlot)
 {
-	ActiveSlot = NewActiveSlot;
-	
+	if (ActiveSlot == NewActiveSlot) return;
+
+	ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
+	if (!OwnerCharacter) return;
+
+	// Step 1: holster old
+	if (FInteractableEquipmentStruct* OldStruct = FindSlot(ActiveSlot))
+	{
+		if (OldStruct->EquippedActor.IsValid() && OldStruct->HolsterSocket != NAME_None)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("SetActiveSlot: Holstering %s into %s"),
+				  *OldStruct->EquippedActor->GetName(),
+				  *OldStruct->HolsterSocket.ToString());
+
+			
+			OldStruct->EquippedActor->AttachToComponent(
+				OwnerCharacter->GetMesh(),
+				FAttachmentTransformRules::SnapToTargetNotIncludingScale,
+				OldStruct->HolsterSocket
+			);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("SetActiveSlot: %s has no holster socket"),
+				   *OldStruct->EquippedActor->GetName());
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("SetActiveSlot: No OldStruct found for %s"),
+		*UEnum::GetValueAsString(ActiveSlot));
+	}
+
+	// Step 2: if switching to None, stop here
+	if (NewActiveSlot == EEquipmentSlot::None)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("SetActiveSlot: Switching to None (empty hands)"));
+		ActiveSlot = EEquipmentSlot::None;
+		return;
+	}
+
+	// Step 3: attach new to hand
+	if (FInteractableEquipmentStruct* NewSlot = FindSlot(NewActiveSlot))
+	{
+		if (NewSlot->EquippedActor.IsValid() && NewSlot->HandSocket != NAME_None)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("SetActiveSlot: Attaching %s to hand socket %s"),
+				   *NewSlot->EquippedActor->GetName(),
+				   *NewSlot->HandSocket.ToString());
+			
+			NewSlot->EquippedActor->AttachToComponent(
+				OwnerCharacter->GetMesh(),
+				FAttachmentTransformRules::SnapToTargetNotIncludingScale,
+				NewSlot->HandSocket
+			);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("SetActiveSlot: %s has no hand socket"),
+				*NewSlot->EquippedActor->GetName());
+		}
+		ActiveSlot = NewActiveSlot;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("SetActiveSlot: No struct found for %s"),
+			*UEnum::GetValueAsString(NewActiveSlot));
+	}
+}
+
+void UEquipmentComponent::SetSlotToEmpty(FInteractableEquipmentStruct* Slot)
+{
+	Slot->EquipmentName = EEquipmentName::None;
+	Slot->EquippedActor = nullptr;
+	Slot->SkeletalMesh = nullptr;
+	Slot->EquipmentUsageState = EEquipmentUsageState::Empty;
+	Slot->HandSocket = NAME_None;
+	Slot->HolsterSocket = NAME_None;
 }
 
 void UEquipmentComponent::UnequipActiveItem()
@@ -219,11 +313,8 @@ void UEquipmentComponent::UnequipActiveItem()
 
 	ActiveEquipment->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 
-	Slot->EquippedActor = nullptr;
-	Slot->SkeletalMesh = nullptr;
-	Slot->EquipmentUsageState = EEquipmentUsageState::Empty;
-	Slot->AttachSocket = NAME_None;
-
+	SetSlotToEmpty(Slot);
+	
 	ActiveSlot = EEquipmentSlot::None;
 
 	UE_LOG(LogTemp, Warning, TEXT("Dropped equipment: %s"), *GetNameSafe(ActiveEquipment));

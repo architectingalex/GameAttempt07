@@ -26,9 +26,11 @@ AInteractableEquipment::AInteractableEquipment()
 	
 	// Fill out the struct so EquipComponent can copy it
 	InteractableEquipmentStruct.SkeletalMesh = SkeletalMeshComponent->GetSkeletalMeshAsset();
-	InteractableEquipmentStruct.AttachSocket = TEXT("WeaponSocket"); // or whatever makes sense
+	InteractableEquipmentStruct.HandSocket = TEXT("WeaponSocket"); 
+	InteractableEquipmentStruct.HolsterSocket = TEXT("HolsterSocket");
 	InteractableEquipmentStruct.EquipmentSlot = EEquipmentSlot::Primary;
 	InteractableEquipmentStruct.EquipmentUsageState = EEquipmentUsageState::Empty;
+	
 }
 
 void AInteractableEquipment::OnConstruction(const FTransform& Transform)

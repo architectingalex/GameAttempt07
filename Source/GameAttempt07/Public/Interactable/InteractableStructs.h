@@ -31,7 +31,10 @@ struct GAMEATTEMPT07_API FInteractableEquipmentStruct
 	TWeakObjectPtr<AInteractableEquipment> EquippedActor = nullptr;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Equipment")
-	FName AttachSocket = NAME_None;
+	FName HandSocket = NAME_None;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Equipment")
+	FName HolsterSocket = NAME_None;
 
 
 };
