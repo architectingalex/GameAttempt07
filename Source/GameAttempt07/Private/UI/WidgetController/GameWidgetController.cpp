@@ -10,4 +10,6 @@ void UGameWidgetController::SetWidgetControllerParams(const FWidgetControllerPar
 
 void UGameWidgetController::BroadcastInitialValues()
 {
+
+	UE_LOG(LogTemp, Error, TEXT("SOS_stage 3"));
 }

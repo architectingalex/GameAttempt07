@@ -7,52 +7,91 @@
 #include "Interactable/Equipment/InteractableEquipment.h"
 #include "EquipmentComponent.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnEquipmentSlotChanged, FInteractableEquipmentStruct, NewSlotInfo);
+
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class GAMEATTEMPT07_API UEquipmentComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
+public:
 	UEquipmentComponent();
-	void AssignToSlot(class AInteractableEquipment* NewEquip, FInteractableEquipmentStruct* Slot);
-	void DebugPrintEquipment() const;
-	bool CanAttach(AInteractableEquipment* NewEquip, FInteractableEquipmentStruct* Slot, ACharacter*& OutOwner) const;
-	void DisablePhysics(USkeletalMeshComponent* EquipMesh);
-	void EnablePhysics(USkeletalMeshComponent* EquipMesh);
-	void DisableCollision(AInteractableEquipment* NewEquip);
-	void PrepareForAttachment(AInteractableEquipment* NewEquip);
-	bool PrepareForAttachement(AInteractableEquipment* NewEquip, FInteractableEquipmentStruct* Slot, ACharacter*& OwnerCharacter);
-	void AttachMeshToComponent(AInteractableEquipment* NewEquip, FInteractableEquipmentStruct* Slot);
 
-	void DropActiveEquipment();
-	
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	/** High-level operations */
+	void EquipItem(class AInteractableEquipment* NewEquip);
+	void UnequipActiveItem();
+
+	/** Queries */
 	FInteractableEquipmentStruct* FindSlot(EEquipmentSlot SlotType);
-	
+	AInteractableEquipment* GetActiveEquipment() const;
+
+	/** State control */
+	void SetActiveSlot(EEquipmentSlot NewActiveSlot);
+
+	/** Debug */
+	void DebugPrintEquipment() const;
+
+	UPROPERTY(BlueprintAssignable, Category="Equipment")
+	FOnEquipmentSlotChanged OnEquipmentSlotChanged;
+
+	/** Slots */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Equipment")
 	FInteractableEquipmentStruct PrimaryInteractableEquipment;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Equipment")
 	FInteractableEquipmentStruct SecondaryInteractableEquipment;
 
-
-	
-	void TryEquip(class AInteractableEquipment* NewEquip);
-	void AttachMeshToCharacter(AInteractableEquipment* NewEquip, FInteractableEquipmentStruct* Slot,
-	                           ACharacter* OwnerCharacter);
-	void AttachToCharacter(class AInteractableEquipment* NewEquip, FInteractableEquipmentStruct* Slot);
-
-	AInteractableEquipment* GetActiveEquipment() const;
-	void SetActiveSlot(EEquipmentSlot NewActiveSlot);
-
-private:
-	TArray<FInteractableEquipmentStruct*> GetAllSlots();
-
-	EEquipmentSlot ActiveSlot = EEquipmentSlot::None;
-	
 protected:
 	virtual void BeginPlay() override;
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+private:
+	/** Equip helpers */	
+	void EquipItemToSlot(class AInteractableEquipment* NewEquip, FInteractableEquipmentStruct* Slot);
+	void SetSlotFromItem(class AInteractableEquipment* NewEquip, FInteractableEquipmentStruct* Slot);
+
+	/** Attachment helpers */
+	bool CanAttach(AInteractableEquipment* NewEquip, FInteractableEquipmentStruct* Slot, ACharacter*& OutOwner) const;
+	//bool PrepareForAttachement(AInteractableEquipment* NewEquip, FInteractableEquipmentStruct* Slot, ACharacter*& OwnerCharacter);
+	void PrepareForAttachment(AInteractableEquipment* NewEquip);
+	void AttachMesh(AInteractableEquipment* NewEquip, FInteractableEquipmentStruct* Slot, ACharacter* OwnerCharacter);
+	void AttachItemToCharacter(class AInteractableEquipment* NewEquip, FInteractableEquipmentStruct* Slot);
+
+	/** Physics / collision helpers */
+	void DisablePhysics(USkeletalMeshComponent* EquipMesh);
+	void EnablePhysics(USkeletalMeshComponent* EquipMesh);
+	void DisableCollision(AInteractableEquipment* NewEquip);
+
+	/** Internal data */
+	TArray<FInteractableEquipmentStruct*> GetAllSlots();
+	EEquipmentSlot ActiveSlot = EEquipmentSlot::None;
+
+
+	
+
+	
+
+	
+	
+
+	
+
+	
+	
+	
+	
+
+
+
+
+
+	
+
+private:
+
+	
+
 	
 	
 

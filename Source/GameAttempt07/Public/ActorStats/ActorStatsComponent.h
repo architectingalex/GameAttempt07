@@ -18,14 +18,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats")
 	float MaxHealth = 100.f;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Stats")
-	float CurrentHealth;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats")
+	float CurrentHealth = 100.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats")
 	float MaxStamina = 100.f;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Stats")
-	float CurrentStamina;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats")
+	float CurrentStamina = 100.f;
 
 
 protected:

@@ -3,6 +3,7 @@
 
 #include "Character/GameCharacter.h"
 
+#include "ActorStats/ActorStatsComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/SphereComponent.h"
 #include "Interaction/InteractionComponent.h"
@@ -17,6 +18,7 @@ AGameCharacter::AGameCharacter()
 
 	InteractionComponent = CreateDefaultSubobject<UInteractionComponent>(TEXT("InteractionComponent"));
 	EquipmentComponent = CreateDefaultSubobject<UEquipmentComponent>(TEXT("EquipmentComponent"));
+	ActorStatsComponent = CreateDefaultSubobject<UActorStatsComponent>(TEXT("ActorStatsComponent"));
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
@@ -58,14 +60,13 @@ void AGameCharacter::Tick(float DeltaTime)
 void AGameCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
-	CurrentHealth = MaxHealth;
-	CurrentStamina = MaxStamina;
+	
 	if (AGamePlayerController* GamePlayerController = Cast<AGamePlayerController>(GetController()))
 	{
 		if (AGameHUD* GameHUD = Cast<AGameHUD>(GamePlayerController->GetHUD()))
 		{
 			GameHUD->InitOverlay(GamePlayerController);
+			UE_LOG(LogTemp, Error, TEXT("SOS_stage 1!"));
 		}
 	}
 }

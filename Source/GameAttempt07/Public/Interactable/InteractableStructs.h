@@ -16,10 +16,10 @@ struct GAMEATTEMPT07_API FInteractableEquipmentStruct
 {
 	GENERATED_BODY()
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Equipment")
-	EEquipmentName EquipmentName = EEquipmentName::None;
+	EEquipmentName EquipmentName = EEquipmentName::Pistol;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Equipment")
-	EEquipmentSlot EquipmentSlot = EEquipmentSlot::None;
+	EEquipmentSlot EquipmentSlot = EEquipmentSlot::Primary;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Equipment")
 	TObjectPtr<USkeletalMesh> SkeletalMesh = nullptr;

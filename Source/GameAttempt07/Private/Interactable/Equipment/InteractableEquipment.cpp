@@ -22,6 +22,13 @@ AInteractableEquipment::AInteractableEquipment()
 	CollisionSphere->InitSphereRadius(100.f);
 	CollisionSphere->SetCollisionResponseToAllChannels(ECR_Ignore);
 	CollisionSphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+
+	
+	// Fill out the struct so EquipComponent can copy it
+	InteractableEquipmentStruct.SkeletalMesh = SkeletalMeshComponent->GetSkeletalMeshAsset();
+	InteractableEquipmentStruct.AttachSocket = TEXT("WeaponSocket"); // or whatever makes sense
+	InteractableEquipmentStruct.EquipmentSlot = EEquipmentSlot::Primary;
+	InteractableEquipmentStruct.EquipmentUsageState = EEquipmentUsageState::Empty;
 }
 
 void AInteractableEquipment::OnConstruction(const FTransform& Transform)

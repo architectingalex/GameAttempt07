@@ -5,10 +5,13 @@
 #include "CoreMinimal.h"
 #include "UI/WidgetController/GameWidgetController.h"
 #include "ActorStats/ActorStatsComponent.h"
+#include "Interactable/InteractableStructs.h"
 #include "OverlayWidgetController.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHealthChangedSignature, float, NewHealth);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnMaxHealthChangedSignature, float, NewMaxHealth);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnPrimaryEquipmentChanged, FInteractableEquipmentStruct, NewSlotInfo);
+
 
 
 /**
@@ -27,5 +30,12 @@ public:
 	
 	UPROPERTY(BlueprintAssignable, Category = "Attributes")
 	FOnMaxHealthChangedSignature OnMaxHealthChanged;
+
+	UPROPERTY(BlueprintAssignable, Category="Equipment")
+	FOnPrimaryEquipmentChanged OnPrimaryEquipmentChanged;
+
+	UFUNCTION()
+	void HandleEquipmentSlotChanged(FInteractableEquipmentStruct NewSlotInfo);
+
 	
 };

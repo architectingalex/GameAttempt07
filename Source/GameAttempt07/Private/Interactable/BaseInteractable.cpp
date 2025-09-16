@@ -28,7 +28,7 @@ void ABaseInteractable::InteractWithObject_Implementation(AActor* Interactor)
 
 	if (UEquipmentComponent* EquipComp = Interactor->FindComponentByClass<UEquipmentComponent>())
 	{
-		EquipComp->TryEquip(Cast<AInteractableEquipment>(this));
+		EquipComp->EquipItem(Cast<AInteractableEquipment>(this));
 	}
 }
 

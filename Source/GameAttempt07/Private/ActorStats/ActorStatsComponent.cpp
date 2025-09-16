@@ -12,9 +12,7 @@ UActorStatsComponent::UActorStatsComponent()
 void UActorStatsComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	CurrentHealth = MaxHealth;
-	CurrentStamina = MaxStamina;
+	
 	
 }
 

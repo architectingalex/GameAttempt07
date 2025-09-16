@@ -48,73 +48,39 @@ TArray<FInteractableEquipmentStruct*> UEquipmentComponent::GetAllSlots()
 	};
 }
 
-void UEquipmentComponent::TryEquip(AInteractableEquipment* NewEquip)
+void UEquipmentComponent::EquipItem(AInteractableEquipment* NewEquip)
 {
 	if (!NewEquip) return;
 
 	EEquipmentSlot NewItemsSlot = NewEquip->InteractableEquipmentStruct.EquipmentSlot;
 	if (FInteractableEquipmentStruct* Slot = FindSlot(NewItemsSlot))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Found matching slot: %s"),
-			*UEnum::GetValueAsString(NewItemsSlot));
-		AssignToSlot(NewEquip, Slot);
+		EquipItemToSlot(NewEquip, Slot);
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("No matching slot for %s"),
-			*UEnum::GetValueAsString(NewItemsSlot));
+
 	}
 }
 
-void UEquipmentComponent::AssignToSlot(class AInteractableEquipment* NewEquip, FInteractableEquipmentStruct* Slot)
+void UEquipmentComponent::SetSlotFromItem(class AInteractableEquipment* NewEquip, FInteractableEquipmentStruct* Slot)
 {
 	if (!NewEquip || !Slot) return;
-	if (Slot->EquipmentUsageState != EEquipmentUsageState::Empty)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Slot %s already occupied, ignoring %s"), *UEnum::GetValueAsString(Slot->EquipmentSlot), *GetNameSafe(NewEquip));
-		return;
-	}
-
+	
+	Slot->EquipmentName  = NewEquip->InteractableEquipmentStruct.EquipmentName;
 	Slot->SkeletalMesh = NewEquip->InteractableEquipmentStruct.SkeletalMesh;
 	Slot->EquippedActor = NewEquip;
 	Slot->EquipmentUsageState = EEquipmentUsageState::InUse;
 	Slot->AttachSocket = NewEquip->InteractableEquipmentStruct.AttachSocket;
-
-
-	UE_LOG(LogTemp, Warning, TEXT("Equipped %s into slot %s"), *GetNameSafe(NewEquip), *UEnum::GetValueAsString(Slot->EquipmentSlot));
-	AttachToCharacter(NewEquip, Slot);
 }
 
-void UEquipmentComponent::DebugPrintEquipment() const
+void UEquipmentComponent::EquipItemToSlot(class AInteractableEquipment* NewEquip, FInteractableEquipmentStruct* Slot)
 {
-	// Build list of your slots
-	TArray<const FInteractableEquipmentStruct*> EquipmentSlotList = {
-		&PrimaryInteractableEquipment,
-		&SecondaryInteractableEquipment,
-		// add the rest here: Melee, Explosive, Scanner, etc.
-	};
-
-	for (const FInteractableEquipmentStruct* Slot : EquipmentSlotList)
-	{
-		FString SlotName = UEnum::GetValueAsString(Slot->EquipmentSlot);
-
-		FString MeshName = Slot->SkeletalMesh
-			? Slot->SkeletalMesh->GetName()
-			: TEXT("None");
-
-		FString StateName = UEnum::GetValueAsString(Slot->EquipmentUsageState);
-
-		FString ActorName = (Slot->EquippedActor.IsValid())
-			? Slot->EquippedActor->GetName()
-			: TEXT("None");
-
-		GEngine->AddOnScreenDebugMessage(
-			-1,
-			0.f, // 0.f means it will refresh every tick without stacking
-			FColor::Cyan,
-			FString::Printf(TEXT("%s | State: %s | Mesh: %s | Actor: %s"),
-				*SlotName, *StateName, *MeshName, *ActorName));
-	}
+	if (!NewEquip || !Slot) return;
+	SetSlotFromItem(NewEquip, Slot);
+	AttachItemToCharacter(NewEquip, Slot);
+	SetActiveSlot(Slot->EquipmentSlot);
+	OnEquipmentSlotChanged.Broadcast(*Slot);
 }
 
 bool UEquipmentComponent::CanAttach(AInteractableEquipment* NewEquip, FInteractableEquipmentStruct* Slot, ACharacter*& OutOwner) const
@@ -185,7 +151,7 @@ void UEquipmentComponent::PrepareForAttachment(AInteractableEquipment* NewEquip)
 	DisableCollision(NewEquip);
 }
 
-void UEquipmentComponent::AttachMeshToCharacter(AInteractableEquipment* NewEquip, FInteractableEquipmentStruct* Slot, ACharacter* OwnerCharacter)
+void UEquipmentComponent::AttachMesh(AInteractableEquipment* NewEquip, FInteractableEquipmentStruct* Slot, ACharacter* OwnerCharacter)
 {
 	if (!NewEquip || !Slot || !OwnerCharacter || !OwnerCharacter->GetMesh()) return;
 
@@ -193,14 +159,13 @@ void UEquipmentComponent::AttachMeshToCharacter(AInteractableEquipment* NewEquip
 	NewEquip->SetActorRelativeTransform(FTransform::Identity);
 }
 
-void UEquipmentComponent::AttachToCharacter(AInteractableEquipment* NewEquip, FInteractableEquipmentStruct* Slot)
+void UEquipmentComponent::AttachItemToCharacter(AInteractableEquipment* NewEquip, FInteractableEquipmentStruct* Slot)
 {
 	ACharacter* OwnerCharacter = nullptr;
 	if (!CanAttach(NewEquip, Slot, OwnerCharacter)) return;
 
 	PrepareForAttachment(NewEquip);
-	AttachMeshToCharacter(NewEquip, Slot, OwnerCharacter);
-	SetActiveSlot(Slot->EquipmentSlot);
+	AttachMesh(NewEquip, Slot, OwnerCharacter);
 
 	UE_LOG(LogTemp, Warning, TEXT("%s attached to %s at socket %s"), *GetNameSafe(NewEquip), *OwnerCharacter->GetName(), *Slot->AttachSocket.ToString());
 }
@@ -221,9 +186,10 @@ AInteractableEquipment* UEquipmentComponent::GetActiveEquipment() const
 void UEquipmentComponent::SetActiveSlot(EEquipmentSlot NewActiveSlot)
 {
 	ActiveSlot = NewActiveSlot;
+	
 }
 
-void UEquipmentComponent::DropActiveEquipment()
+void UEquipmentComponent::UnequipActiveItem()
 {
 	UE_LOG(LogTemp, Warning, TEXT("MIIR Called"));
 
@@ -261,5 +227,38 @@ void UEquipmentComponent::DropActiveEquipment()
 	ActiveSlot = EEquipmentSlot::None;
 
 	UE_LOG(LogTemp, Warning, TEXT("Dropped equipment: %s"), *GetNameSafe(ActiveEquipment));
-	
+
+	OnEquipmentSlotChanged.Broadcast(*Slot);
+}
+
+void UEquipmentComponent::DebugPrintEquipment() const
+{
+	// Build list of your slots
+	TArray<const FInteractableEquipmentStruct*> EquipmentSlotList = {
+		&PrimaryInteractableEquipment,
+		&SecondaryInteractableEquipment,
+		// add the rest here: Melee, Explosive, Scanner, etc.
+	};
+
+	for (const FInteractableEquipmentStruct* Slot : EquipmentSlotList)
+	{
+		FString SlotName = UEnum::GetValueAsString(Slot->EquipmentSlot);
+
+		FString MeshName = Slot->SkeletalMesh
+			? Slot->SkeletalMesh->GetName()
+			: TEXT("None");
+
+		FString StateName = UEnum::GetValueAsString(Slot->EquipmentUsageState);
+
+		FString ActorName = (Slot->EquippedActor.IsValid())
+			? Slot->EquippedActor->GetName()
+			: TEXT("None");
+
+		GEngine->AddOnScreenDebugMessage(
+			-1,
+			0.f, // 0.f means it will refresh every tick without stacking
+			FColor::Cyan,
+			FString::Printf(TEXT("%s | State: %s | Mesh: %s | Actor: %s"),
+				*SlotName, *StateName, *MeshName, *ActorName));
+	}
 }

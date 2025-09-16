@@ -7,6 +7,7 @@
 #include "Components/SphereComponent.h"
 #include "Equipment/EquipmentComponent.h"
 #include "Interaction/InteractionComponent.h"
+#include "ActorStats/ActorStatsComponent.h"
 #include "GameCharacter.generated.h"
 
 /**
@@ -20,18 +21,6 @@ class GAMEATTEMPT07_API AGameCharacter : public AGameCharacterBase
 public:
 	AGameCharacter();
 	virtual void Tick(float DeltaTime) override;;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats")
-	float MaxHealth = 100.f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Stats")
-	float CurrentHealth;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats")
-	float MaxStamina = 100.f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Stats")
-	float CurrentStamina;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Components")
 	USphereComponent* InteractionSphere;
@@ -41,6 +30,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Components")
 	UEquipmentComponent* EquipmentComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Components")
+	UActorStatsComponent* ActorStatsComponent;
 
 
 protected:

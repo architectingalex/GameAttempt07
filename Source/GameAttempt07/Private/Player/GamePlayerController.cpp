@@ -115,7 +115,7 @@ void AGamePlayerController::Drop(const FInputActionValue& InputActionValue)
 	{
 		if (UEquipmentComponent* EquipmentComponent = ControlledPawn->FindComponentByClass<UEquipmentComponent>())
 		{
-			EquipmentComponent->DropActiveEquipment();
+			EquipmentComponent->UnequipActiveItem();
 		}
 	}
 }
