@@ -3,7 +3,6 @@
 
 #include "Equipment/EquipmentComponent.h"
 #include "GameFramework/Character.h"
-
 #include "Interactable/Equipment/InteractableEquipment.h"
 
 UEquipmentComponent::UEquipmentComponent()
@@ -12,6 +11,12 @@ UEquipmentComponent::UEquipmentComponent()
 	
 	PrimaryInteractableEquipment.EquipmentSlot = EEquipmentSlot::Primary;
 	SecondaryInteractableEquipment.EquipmentSlot = EEquipmentSlot::Secondary;
+	MeleeInteractableEquipment.EquipmentSlot = EEquipmentSlot::Melee;
+	ExplosiveInteractableEquipment.EquipmentSlot = EEquipmentSlot::Explosive;
+	TraversalInteractableEquipment.EquipmentSlot = EEquipmentSlot::Traversal;
+	ScanInteractableEquipment.EquipmentSlot = EEquipmentSlot::Scanner;
+	NoneInteractableEquipment.EquipmentSlot = EEquipmentSlot::None;
+	CampInteractableEquipment.EquipmentSlot = EEquipmentSlot::Camp;
 }
 
 void UEquipmentComponent::BeginPlay()
@@ -23,8 +28,39 @@ void UEquipmentComponent::BeginPlay()
 void UEquipmentComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	DebugPrintEquipment();
+
 }
+
+void UEquipmentComponent::SetAttachmentMode(AInteractableEquipment* Equip, bool bAttached)
+{
+	if (!Equip || !Equip->SkeletalMeshComponent) return;
+	USkeletalMeshComponent* Mesh = Equip->SkeletalMeshComponent;
+
+	if (bAttached)
+	{
+		DisablePhysics(Mesh);
+		Equip->SetActorEnableCollision(false);
+	}
+	else
+	{
+		EnablePhysics(Mesh);
+		Equip->SetActorEnableCollision(true);
+	}
+}
+
+void UEquipmentComponent::AttachActorToSocket(AInteractableEquipment* Equip, ACharacter* OwnerCharacter, const FName& Socket)
+{
+	if (!Equip || !OwnerCharacter || !OwnerCharacter->GetMesh()) return;
+	if (Socket == NAME_None) return;
+
+	Equip->AttachToComponent(
+		OwnerCharacter->GetMesh(),
+		FAttachmentTransformRules::SnapToTargetNotIncludingScale,
+		Socket
+	);
+	Equip->SetActorRelativeTransform(FTransform::Identity);
+}
+
 
 FInteractableEquipmentStruct* UEquipmentComponent::FindSlot(EEquipmentSlot SlotType)
 {
@@ -43,7 +79,12 @@ TArray<FInteractableEquipmentStruct*> UEquipmentComponent::GetAllSlots()
 	return {
 		&PrimaryInteractableEquipment,
 		&SecondaryInteractableEquipment,
-		// later: add melee, explosives, etc.
+		&MeleeInteractableEquipment,
+		&ExplosiveInteractableEquipment,
+		&TraversalInteractableEquipment,
+		&ScanInteractableEquipment,
+		&CampInteractableEquipment,
+		&NoneInteractableEquipment
 	};
 }
 
@@ -61,8 +102,6 @@ void UEquipmentComponent::EquipItem(AInteractableEquipment* NewEquip)
 		}
 
 		EquipItemToSlot(NewEquip, Slot);
-
-		// Always bring the new one to hand
 		SetActiveSlot(Slot->EquipmentSlot);
 	}
 }
@@ -85,16 +124,13 @@ void UEquipmentComponent::EquipItemToSlot(class AInteractableEquipment* NewEquip
 	if (!NewEquip || !Slot) return;
 
 	SetSlotFromItem(NewEquip, Slot);
-	PrepareForAttachment(NewEquip);
+	SetAttachmentMode(NewEquip, true);
 
 	// By default, just attach to holster first
 	ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
 	if (OwnerCharacter && Slot->HolsterSocket != NAME_None)
 	{
-		NewEquip->AttachToComponent(
-			OwnerCharacter->GetMesh(),
-			FAttachmentTransformRules::SnapToTargetNotIncludingScale,
-			Slot->HolsterSocket
+		NewEquip->AttachToComponent(OwnerCharacter->GetMesh(),FAttachmentTransformRules::SnapToTargetNotIncludingScale,Slot->HolsterSocket
 		);
 	}
 
@@ -109,27 +145,21 @@ bool UEquipmentComponent::CanAttach(AInteractableEquipment* NewEquip, FInteracta
 	OutOwner = Cast<ACharacter>(GetOwner());
 	if (!OutOwner || !OutOwner->GetMesh())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("AttachToCharacter failed: invalid owner or no mesh."));
 		return false;
 	}
 
 	if (Slot->HandSocket == NAME_None)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("AttachToCharacter: no socket specified for slot %s"),
-			*UEnum::GetValueAsString(Slot->EquipmentSlot));
 		return false;
 	}
 
 	if (!OutOwner->GetMesh()->DoesSocketExist(Slot->HandSocket))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("AttachToCharacter: mesh has no socket named %s"),
-			*Slot->HandSocket.ToString());
 		return false;
 	}
 
 	if (!NewEquip->SkeletalMeshComponent)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("AttachToCharacter: Equip has no SkeletalMeshComponent"));
 		return false;
 	}
 
@@ -161,18 +191,12 @@ void UEquipmentComponent::DisableCollision(AInteractableEquipment* NewEquip)
 	NewEquip->SetActorEnableCollision(false);
 }
 
-void UEquipmentComponent::PrepareForAttachment(AInteractableEquipment* NewEquip)
-{
-	if (!NewEquip || !NewEquip->SkeletalMeshComponent) return;
-	
-	DisablePhysics(NewEquip->SkeletalMeshComponent);
-	DisableCollision(NewEquip);
-}
+
 
 void UEquipmentComponent::AttachMesh(AInteractableEquipment* NewEquip, FInteractableEquipmentStruct* Slot, ACharacter* OwnerCharacter)
 {
+	//AttachToSocket(NewEquip, OwnerCharacter, Slot);
 	if (!NewEquip || !Slot || !OwnerCharacter || !OwnerCharacter->GetMesh()) return;
-
 	NewEquip->AttachToComponent(OwnerCharacter->GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, Slot->HandSocket);
 	NewEquip->SetActorRelativeTransform(FTransform::Identity);
 }
@@ -181,11 +205,8 @@ void UEquipmentComponent::AttachItemToCharacter(AInteractableEquipment* NewEquip
 {
 	ACharacter* OwnerCharacter = nullptr;
 	if (!CanAttach(NewEquip, Slot, OwnerCharacter)) return;
-
-	PrepareForAttachment(NewEquip);
+	SetAttachmentMode(NewEquip, true);
 	AttachMesh(NewEquip, Slot, OwnerCharacter);
-
-	UE_LOG(LogTemp, Warning, TEXT("%s attached to %s at socket %s"), *GetNameSafe(NewEquip), *OwnerCharacter->GetName(), *Slot->HandSocket.ToString());
 }
 
 AInteractableEquipment* UEquipmentComponent::GetActiveEquipment() const
@@ -196,8 +217,33 @@ AInteractableEquipment* UEquipmentComponent::GetActiveEquipment() const
 		return PrimaryInteractableEquipment.EquippedActor.Get();
 	case EEquipmentSlot::Secondary:
 		return SecondaryInteractableEquipment.EquippedActor.Get();
+	case EEquipmentSlot::Melee:
+		return MeleeInteractableEquipment.EquippedActor.Get();
+	case EEquipmentSlot::Explosive:
+		return ExplosiveInteractableEquipment.EquippedActor.Get();
+	case EEquipmentSlot::Scanner:
+		return ScanInteractableEquipment.EquippedActor.Get();
+	case EEquipmentSlot::Traversal:
+		return TraversalInteractableEquipment.EquippedActor.Get();
+	case EEquipmentSlot::None:
+		return NoneInteractableEquipment.EquippedActor.Get();
+	case EEquipmentSlot::Camp:
+		return CampInteractableEquipment.EquippedActor.Get();
 	default:
 		return nullptr;
+	}
+}
+
+void UEquipmentComponent::AttachToSocket(EEquipmentSlot NewActiveSlot, ACharacter* OwnerCharacter, FInteractableEquipmentStruct* Slot)
+{
+	if (!Slot || !Slot->EquippedActor.IsValid() || !OwnerCharacter) return;
+	if (Slot->EquipmentSlot == NewActiveSlot)
+	{
+		AttachActorToSocket(Slot->EquippedActor.Get(), OwnerCharacter, Slot->HandSocket);
+	}
+	else
+	{
+		AttachActorToSocket(Slot->EquippedActor.Get(), OwnerCharacter, Slot->HolsterSocket);
 	}
 }
 
@@ -207,70 +253,16 @@ void UEquipmentComponent::SetActiveSlot(EEquipmentSlot NewActiveSlot)
 
 	ACharacter* OwnerCharacter = Cast<ACharacter>(GetOwner());
 	if (!OwnerCharacter) return;
+	
+	for (FInteractableEquipmentStruct* Slot : GetAllSlots())
+	{
+		if (!Slot || !Slot->EquippedActor.IsValid()) continue;
+		AttachToSocket(NewActiveSlot, OwnerCharacter, Slot);
+	}
+	UE_LOG(LogTemp, Error, TEXT("EquipmentComponent setting active slot to %s"),
+	*UEnum::GetValueAsString(NewActiveSlot));
 
-	// Step 1: holster old
-	if (FInteractableEquipmentStruct* OldStruct = FindSlot(ActiveSlot))
-	{
-		if (OldStruct->EquippedActor.IsValid() && OldStruct->HolsterSocket != NAME_None)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("SetActiveSlot: Holstering %s into %s"),
-				  *OldStruct->EquippedActor->GetName(),
-				  *OldStruct->HolsterSocket.ToString());
-
-			
-			OldStruct->EquippedActor->AttachToComponent(
-				OwnerCharacter->GetMesh(),
-				FAttachmentTransformRules::SnapToTargetNotIncludingScale,
-				OldStruct->HolsterSocket
-			);
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("SetActiveSlot: %s has no holster socket"),
-				   *OldStruct->EquippedActor->GetName());
-		}
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("SetActiveSlot: No OldStruct found for %s"),
-		*UEnum::GetValueAsString(ActiveSlot));
-	}
-
-	// Step 2: if switching to None, stop here
-	if (NewActiveSlot == EEquipmentSlot::None)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("SetActiveSlot: Switching to None (empty hands)"));
-		ActiveSlot = EEquipmentSlot::None;
-		return;
-	}
-
-	// Step 3: attach new to hand
-	if (FInteractableEquipmentStruct* NewSlot = FindSlot(NewActiveSlot))
-	{
-		if (NewSlot->EquippedActor.IsValid() && NewSlot->HandSocket != NAME_None)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("SetActiveSlot: Attaching %s to hand socket %s"),
-				   *NewSlot->EquippedActor->GetName(),
-				   *NewSlot->HandSocket.ToString());
-			
-			NewSlot->EquippedActor->AttachToComponent(
-				OwnerCharacter->GetMesh(),
-				FAttachmentTransformRules::SnapToTargetNotIncludingScale,
-				NewSlot->HandSocket
-			);
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("SetActiveSlot: %s has no hand socket"),
-				*NewSlot->EquippedActor->GetName());
-		}
-		ActiveSlot = NewActiveSlot;
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("SetActiveSlot: No struct found for %s"),
-			*UEnum::GetValueAsString(NewActiveSlot));
-	}
+	ActiveSlot = NewActiveSlot;
 }
 
 void UEquipmentComponent::SetSlotToEmpty(FInteractableEquipmentStruct* Slot)
@@ -285,71 +277,28 @@ void UEquipmentComponent::SetSlotToEmpty(FInteractableEquipmentStruct* Slot)
 
 void UEquipmentComponent::UnequipActiveItem()
 {
-	UE_LOG(LogTemp, Warning, TEXT("MIIR Called"));
 
 	AInteractableEquipment* ActiveEquipment = GetActiveEquipment();
 	if (!ActiveEquipment)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("DropActiveEquipment: No active equipment to drop"));
 		return;
 	}
 
 	FInteractableEquipmentStruct* Slot = FindSlot(ActiveSlot);
 	if (!Slot)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("DropActiveEquipment: Active slot struct not found"));
 		return;
 	}
 
 	if (ActiveEquipment->SkeletalMeshComponent)
 	{
 		USkeletalMeshComponent* EquipmentMesh = ActiveEquipment->SkeletalMeshComponent;
-
-		
 		EnablePhysics(EquipmentMesh);
-		
 	}
-	ActiveEquipment->SetActorEnableCollision(true);
-
-	ActiveEquipment->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-
-	SetSlotToEmpty(Slot);
 	
+	ActiveEquipment->SetActorEnableCollision(true);
+	ActiveEquipment->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+	SetSlotToEmpty(Slot);
 	ActiveSlot = EEquipmentSlot::None;
-
-	UE_LOG(LogTemp, Warning, TEXT("Dropped equipment: %s"), *GetNameSafe(ActiveEquipment));
-
 	OnEquipmentSlotChanged.Broadcast(*Slot);
-}
-
-void UEquipmentComponent::DebugPrintEquipment() const
-{
-	// Build list of your slots
-	TArray<const FInteractableEquipmentStruct*> EquipmentSlotList = {
-		&PrimaryInteractableEquipment,
-		&SecondaryInteractableEquipment,
-		// add the rest here: Melee, Explosive, Scanner, etc.
-	};
-
-	for (const FInteractableEquipmentStruct* Slot : EquipmentSlotList)
-	{
-		FString SlotName = UEnum::GetValueAsString(Slot->EquipmentSlot);
-
-		FString MeshName = Slot->SkeletalMesh
-			? Slot->SkeletalMesh->GetName()
-			: TEXT("None");
-
-		FString StateName = UEnum::GetValueAsString(Slot->EquipmentUsageState);
-
-		FString ActorName = (Slot->EquippedActor.IsValid())
-			? Slot->EquippedActor->GetName()
-			: TEXT("None");
-
-		GEngine->AddOnScreenDebugMessage(
-			-1,
-			0.f, // 0.f means it will refresh every tick without stacking
-			FColor::Cyan,
-			FString::Printf(TEXT("%s | State: %s | Mesh: %s | Actor: %s"),
-				*SlotName, *StateName, *MeshName, *ActorName));
-	}
 }

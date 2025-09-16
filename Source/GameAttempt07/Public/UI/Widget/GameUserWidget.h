@@ -4,7 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Interactable/InteractableStructs.h"
 #include "GameUserWidget.generated.h"
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSlotClicked, FInteractableEquipmentStruct, SlotData);
 
 /**
  * 
@@ -16,12 +19,20 @@ class GAMEATTEMPT07_API UGameUserWidget : public UUserWidget
 
 public:
 	UFUNCTION(BlueprintCallable)
-	void SetWidgetController(UObject* InWidgetController);
+	virtual void SetWidgetController(UObject* InWidgetController);
 	
 	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<UObject> WidgetController;
 
+	UPROPERTY(BlueprintAssignable, Category="UI")
+	FOnSlotClicked OnSlotClicked;
+
 protected:
 	UFUNCTION(BlueprintImplementableEvent)
 	void WidgetControllerSet();
+
+	UFUNCTION(BlueprintCallable)
+	void HandleSlotClicked(FInteractableEquipmentStruct SlotData);
+
+	
 };

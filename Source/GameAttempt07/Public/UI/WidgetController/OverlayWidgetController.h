@@ -35,6 +35,10 @@ public:
 	FOnEquipmentChanged OnEquipmentChanged;
 
 	UFUNCTION()
+	void HandleSlotClicked(FInteractableEquipmentStruct SlotData);
+
+
+	UFUNCTION()
 	void HandleEquipmentSlotChanged(FInteractableEquipmentStruct NewSlotInfo);
 
 	

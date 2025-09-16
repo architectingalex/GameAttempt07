@@ -7,6 +7,7 @@
 #include "EnhancedInputComponent.h"
 #include "Equipment/EquipmentComponent.h"
 #include "Interaction/InteractionComponent.h"
+#include "UI/HUD/GameHUD.h"
 
 AGamePlayerController::AGamePlayerController()
 {
@@ -43,6 +44,7 @@ void AGamePlayerController::SetupInputComponent()
 	EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AGamePlayerController::Look);
 	EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Started, this, &AGamePlayerController::Interact);
 	EnhancedInputComponent->BindAction(DropAction, ETriggerEvent::Started, this, &AGamePlayerController::Drop);
+	EnhancedInputComponent->BindAction(ShowMenuAction, ETriggerEvent::Started, this, &AGamePlayerController::ShowMenu);
 }
 
 void AGamePlayerController::Move(const FInputActionValue& InputActionValue)
@@ -118,4 +120,19 @@ void AGamePlayerController::Drop(const FInputActionValue& InputActionValue)
 			EquipmentComponent->UnequipActiveItem();
 		}
 	}
+}
+
+void AGamePlayerController::ShowMenu(const FInputActionValue& InputActionValue)
+{
+	if (AGameHUD* HUD = Cast<AGameHUD>(GetHUD()))
+	{
+		/*if (HUD->EquipmentMenuWidget)
+		{
+			HUD->EquipmentMenuWidget->SetVisibility(ESlateVisibility::Visible);
+			// Optional: lock mouse, disable look input
+			bShowMouseCursor = true;
+			SetInputMode(FInputModeUIOnly());
+		}*/
+	}
+	
 }

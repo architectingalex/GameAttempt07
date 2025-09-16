@@ -25,13 +25,14 @@ public:
 	/** Queries */
 	FInteractableEquipmentStruct* FindSlot(EEquipmentSlot SlotType);
 	AInteractableEquipment* GetActiveEquipment() const;
+	void AttachToSocket(EEquipmentSlot NewActiveSlot, ACharacter* OwnerCharacter, FInteractableEquipmentStruct* Slot);
 
 	/** State control */
 	void SetActiveSlot(EEquipmentSlot NewActiveSlot);
 	void SetSlotToEmpty(FInteractableEquipmentStruct* Slot);
 
 	/** Debug */
-	void DebugPrintEquipment() const;
+
 
 	UPROPERTY(BlueprintAssignable, Category="Equipment")
 	FOnEquipmentSlotChanged OnEquipmentSlotChanged;
@@ -43,9 +44,30 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Equipment")
 	FInteractableEquipmentStruct SecondaryInteractableEquipment;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Equipment")
+	FInteractableEquipmentStruct MeleeInteractableEquipment;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Equipment")
+	FInteractableEquipmentStruct ExplosiveInteractableEquipment;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Equipment")
+	FInteractableEquipmentStruct CampInteractableEquipment;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Equipment")
+	FInteractableEquipmentStruct TraversalInteractableEquipment;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Equipment")
+	FInteractableEquipmentStruct NoneInteractableEquipment;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Equipment")
+	FInteractableEquipmentStruct ScanInteractableEquipment;
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	void SetAttachmentMode(AInteractableEquipment* Equip, bool bAttached);
+	void AttachActorToSocket(AInteractableEquipment* Equip, ACharacter* OwnerCharacter, const FName& Socket);
+
 
 private:
 	/** Equip helpers */	
@@ -55,7 +77,7 @@ private:
 	/** Attachment helpers */
 	bool CanAttach(AInteractableEquipment* NewEquip, FInteractableEquipmentStruct* Slot, ACharacter*& OutOwner) const;
 	//bool PrepareForAttachement(AInteractableEquipment* NewEquip, FInteractableEquipmentStruct* Slot, ACharacter*& OwnerCharacter);
-	void PrepareForAttachment(AInteractableEquipment* NewEquip);
+	
 	void AttachMesh(AInteractableEquipment* NewEquip, FInteractableEquipmentStruct* Slot, ACharacter* OwnerCharacter);
 	void AttachItemToCharacter(class AInteractableEquipment* NewEquip, FInteractableEquipmentStruct* Slot);
 
@@ -67,33 +89,5 @@ private:
 	/** Internal data */
 	TArray<FInteractableEquipmentStruct*> GetAllSlots();
 	EEquipmentSlot ActiveSlot = EEquipmentSlot::None;
-
-
-	
-
-	
-
-	
-	
-
-	
-
-	
-	
-	
-	
-
-
-
-
-
-	
-
-private:
-
-	
-
-	
-	
 
 };

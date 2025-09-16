@@ -44,10 +44,14 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Input")
 	TObjectPtr<UInputAction> DropAction;
 
+	UPROPERTY(EditAnywhere, Category = "Input")
+	TObjectPtr<UInputAction> ShowMenuAction;
+
 	void Move(const FInputActionValue& InputActionValue);
 	void Look (const FInputActionValue& InputActionValue);
 	void Interact (const FInputActionValue& InputActionValue);
 	void Drop (const FInputActionValue& InputActionValue);
+	void ShowMenu (const FInputActionValue& InputActionValue);
 
 
 

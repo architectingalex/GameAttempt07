@@ -3,11 +3,20 @@
 
 #include "UI/Widget/GameUserWidget.h"
 
+#include "Interactable/InteractableStructs.h"
+
 void UGameUserWidget::SetWidgetController(UObject* InWidgetController)
 {
 	WidgetController = InWidgetController;
 	WidgetControllerSet();
-	UE_LOG(LogTemp, Error, TEXT("SOS_stage 4"));
+
+	
+}
+
+
+void UGameUserWidget::HandleSlotClicked(FInteractableEquipmentStruct SlotData)
+{
+	OnSlotClicked.Broadcast(SlotData);
 	
 }
 

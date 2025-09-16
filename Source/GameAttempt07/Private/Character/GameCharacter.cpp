@@ -66,7 +66,6 @@ void AGameCharacter::BeginPlay()
 		if (AGameHUD* GameHUD = Cast<AGameHUD>(GamePlayerController->GetHUD()))
 		{
 			GameHUD->InitOverlay(GamePlayerController);
-			UE_LOG(LogTemp, Error, TEXT("SOS_stage 1!"));
 		}
 	}
 }

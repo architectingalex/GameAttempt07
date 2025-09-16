@@ -27,10 +27,8 @@ void AGameHUD::InitOverlay(AGamePlayerController* PC)
 	UOverlayWidgetController* WidgetController = GetOverlayWidgetController(WidgetControllerParams);
 
 	OverlayWidget->SetWidgetController(WidgetController);
-	WidgetController->BroadcastInitialValues();
-	
-	UE_LOG(LogTemp, Error, TEXT("SOS_stage 2"));
 	Widget->AddToViewport();
+	WidgetController->BroadcastInitialValues();
 }
 
 
