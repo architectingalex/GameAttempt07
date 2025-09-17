@@ -25,7 +25,18 @@ public:
 	UOverlayWidgetController* GetOverlayWidgetController(const FWidgetControllerParams& WCParams);
 
 	void InitOverlay(AGamePlayerController* PC);
+	void ToggleEquipmentMenu(bool bShow);
 
+
+	// In GameHUD.h
+	UUserWidget* GetEquipmentMenuWidget() const { return EquipmentMenuWidget; }
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<UGameUserWidget> EquipmentMenuClass;
+
+	UPROPERTY()
+	UGameUserWidget* EquipmentMenuWidget;
+	
 protected:
 	
 private:

@@ -31,4 +31,30 @@ void AGameHUD::InitOverlay(AGamePlayerController* PC)
 	WidgetController->BroadcastInitialValues();
 }
 
+void AGameHUD::ToggleEquipmentMenu(bool bShow)
+{
+	if (OverlayWidget)
+	{
+		if (!EquipmentMenuWidget) // cache it
+		{
+			EquipmentMenuWidget = Cast<UGameUserWidget>(OverlayWidget->GetWidgetFromName(TEXT("EquipmentMenu")));
+
+			if (EquipmentMenuWidget)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("EquipmentMenuWidget cached: %s"), *EquipmentMenuWidget->GetName());
+			}
+			else
+			{
+				UE_LOG(LogTemp, Error, TEXT("Could not find EquipmentMenu in Overlay!"));
+				return;
+			}
+		}
+
+		EquipmentMenuWidget->SetVisibility(bShow ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+		UE_LOG(LogTemp, Warning, TEXT("ToggleEquipmentMenu: EquipmentMenu set %s"),
+			bShow ? TEXT("Visible") : TEXT("Hidden"));
+	}
+}
+
+
 

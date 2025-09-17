@@ -4,6 +4,7 @@
 #include "UI/WidgetController/OverlayWidgetController.h"
 #include "ActorStats/ActorStatsComponent.h"
 #include "Equipment/EquipmentComponent.h"
+#include "UI/HUD/GameHUD.h"
 
 
 void UOverlayWidgetController::BroadcastInitialValues()
@@ -38,10 +39,9 @@ void UOverlayWidgetController::BroadcastInitialValues()
 
 void UOverlayWidgetController::HandleSlotClicked(FInteractableEquipmentStruct SlotData)
 {
-
 	UE_LOG(LogTemp, Error, TEXT("OverlayWidgetController got click for slot %s"),
-	*UEnum::GetValueAsString(SlotData.EquipmentSlot));
-	
+		*UEnum::GetValueAsString(SlotData.EquipmentSlot));
+    
 	if (APlayerController* PC = Cast<APlayerController>(PlayerController))
 	{
 		if (APawn* Pawn = PC->GetPawn())
@@ -50,6 +50,12 @@ void UOverlayWidgetController::HandleSlotClicked(FInteractableEquipmentStruct Sl
 			{
 				EquipmentComponent->SetActiveSlot(SlotData.EquipmentSlot);
 			}
+		}
+
+		// Let PlayerController handle closing & input reset
+		if (AGamePlayerController* GamePC = Cast<AGamePlayerController>(PC))
+		{
+			GamePC->HideMenuClicked();
 		}
 	}
 }
